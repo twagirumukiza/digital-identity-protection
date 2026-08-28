@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIP V3 — Digital Identity Protection</title>
+<style>
+:root{
+  --bg:#f3f6fb;--card:#fff;--text:#142033;--muted:#64748b;--line:#dfe6ef;
+  --blue:#2563eb;--red:#dc2626;--orange:#d97706;--green:#059669;
+  --header-bg:#0f172a;--header-text:#fff;--header-muted:#cbd5e1;
+  --overlay:rgba(15,23,42,.55);
+}
+[data-theme="dark"]{
+  --bg:#0b1220;--card:#111a2c;--text:#e7edf7;--muted:#93a2ba;--line:#243247;
+  --blue:#3b82f6;--red:#f87171;--orange:#fb923c;--green:#34d399;
+  --header-bg:#05070d;--header-text:#f1f5f9;--header-muted:#8ea0bd;
+  --overlay:rgba(0,0,0,.65);
+}
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial;transition:background .2s,color .2s}
+
+header{background:var(--header-bg);color:var(--header-text);padding:16px 4%;display:flex;justify-content:space-between;gap:16px;align-items:center;position:relative;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:2px}
+h1{margin:0;font-size:1.375rem}
+header small{color:var(--header-muted);font-size:.75rem}
+#status{font-size:.8rem;letter-spacing:.03em}
+
+nav.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tool-btn{background:transparent;border:1px solid #ffffff33;color:var(--header-text);border-radius:8px;padding:7px 10px;font-size:.75rem;font-weight:700;cursor:pointer;line-height:1}
+.tool-btn:hover{background:#ffffff1a}
+.tool-btn.active{background:#ffffff26;border-color:#ffffff66}
+.fontgrp{display:flex;border:1px solid #ffffff33;border-radius:8px;overflow:hidden}
+.fontgrp button{background:transparent;color:var(--header-text);border:0;padding:7px 10px;cursor:pointer;font-weight:800;border-right:1px solid #ffffff26}
+.fontgrp button:last-child{border-right:0}
+.fontgrp button:hover{background:#ffffff1a}
+.burger{display:none;background:transparent;border:1px solid #ffffff33;border-radius:8px;color:var(--header-text);width:40px;height:36px;cursor:pointer;font-size:1.1rem}
+
+main{max-width:1250px;margin:25px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 8px 30px #00000008}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.span2{grid-column:span 2}
+label{font-size:.75rem;font-weight:800;color:var(--muted);display:block;margin-bottom:5px}
+input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--text)}
+button{border:0;border-radius:9px;padding:11px 15px;font-weight:800;cursor:pointer;font-size:.875rem}
+.primary{background:var(--blue);color:white}
+.secondary{background:#e8eefc;color:#1d4ed8}
+[data-theme="dark"] .secondary{background:#1d3a6e33;color:#93c5fd}
+.danger{background:#fee2e2;color:#991b1b}
+[data-theme="dark"] .danger{background:#7f1d1d55;color:#fca5a5}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.hidden{display:none !important}
+.muted{color:var(--muted)}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.kpi{border:1px solid var(--line);border-radius:13px;padding:15px}
+.kpi strong{display:block;font-size:1.5rem}
+.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:.7rem;font-weight:900}
+.red{background:#fee2e2;color:#991b1b}
+.orange{background:#ffedd5;color:#9a3412}
+.green{background:#d1fae5;color:#065f46}
+.blue{background:#dbeafe;color:#1e40af}
+[data-theme="dark"] .red{background:#7f1d1d55;color:#fca5a5}
+[data-theme="dark"] .orange{background:#7c2d1255;color:#fdba74}
+[data-theme="dark"] .green{background:#064e3b55;color:#6ee7b7}
+[data-theme="dark"] .blue{background:#1e3a8a55;color:#93c5fd}
+
+.progress{height:9px;background:var(--line);border-radius:9px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--blue);transition:.3s}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid var(--line);font-size:.75rem;text-align:left}
+th{color:var(--muted)}
+.notice{padding:11px;border-radius:10px;background:#eff6ff;color:#1e40af;font-size:.75rem}
+[data-theme="dark"] .notice{background:#1d3a6e33;color:#93c5fd}
+.warning{background:#fff7ed;color:#9a3412}
+pre{white-space:pre-wrap;background:#0b1220;color:#dbeafe;padding:14px;border-radius:10px;font-size:.75rem;overflow:auto}
+
+footer{max-width:1250px;margin:20px auto 0;padding:18px 16px 10px;color:var(--muted);font-size:.7rem;border-top:1px solid var(--line)}
+.footer-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.signature{font-weight:800;color:var(--text)}
+.signature span{color:var(--blue)}
+.footer-links{display:flex;gap:14px;flex-wrap:wrap}
+.footer-links a{color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:0;font-size:.7rem;padding:0;font-family:inherit}
+.footer-links a:hover{color:var(--text)}
+.footer-legal{color:var(--muted);line-height:1.6}
+
+.modal-overlay{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;z-index:100;overflow:auto}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:16px;max-width:720px;width:100%;padding:26px;position:relative;box-shadow:0 20px 60px #00000033}
+.modal h2{margin-top:0}
+.modal-close{position:absolute;top:14px;right:14px;background:transparent;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--text);font-size:1rem}
+.modal p, .modal li{font-size:.85rem;line-height:1.6;color:var(--text)}
+.modal .muted{font-size:.75rem}
+
+@media(max-width:900px){
+  .grid,.kpis{grid-template-columns:1fr 1fr}
+  .span2{grid-column:span 2}
+}
+@media(max-width:560px){
+  .grid,.kpis{grid-template-columns:1fr}
+  .span2{grid-column:auto}
+}
+@media(max-width:820px){
+  .burger{display:inline-block}
+  nav.toolbar{display:none;position:absolute;top:100%;right:4%;left:4%;background:var(--header-bg);border:1px solid #ffffff26;border-radius:12px;padding:12px;flex-direction:column;align-items:stretch;gap:10px;z-index:50}
+  nav.toolbar.open{display:flex}
+  .fontgrp{align-self:flex-start}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1 data-i18n="title">🛡️ Digital Identity Protection V3</h1>
+    <small data-i18n="subtitle">Veille domaines · RDAP · Certificate Transparency · scoring · incidents</small>
+  </div>
+  <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+  <nav class="toolbar" id="toolbar">
+    <div class="fontgrp" role="group" aria-label="Taille du texte">
+      <button id="fontMinus" aria-label="Diminuer la taille du texte">A-</button>
+      <button id="fontReset" aria-label="Taille par défaut">A</button>
+      <button id="fontPlus" aria-label="Augmenter la taille du texte">A+</button>
+    </div>
+    <button class="tool-btn" id="themeToggle" data-i18n="themeDark">🌙 Sombre</button>
+    <div class="fontgrp" role="group" aria-label="Langue">
+      <button class="tool-btn" id="langFR">FR</button>
+      <button class="tool-btn" id="langEN">EN</button>
+    </div>
+    <strong id="status" data-i18n="statusReady">PRÊT</strong>
+  </nav>
+</header>
+<main>
+<section class="card">
+<h2 data-i18n="step1Title">1. Définir l'identité à protéger</h2>
+<div class="grid">
+<div class="span2"><label data-i18n="lblUrl">URL officielle *</label><input id="url" placeholder="https://www.exemple.fr"></div>
+<div><label data-i18n="lblBrand">Nom / marque</label><input id="brand" data-i18n-placeholder="phBrand" placeholder="Ex. Twagirumukiza"></div>
+<div><label data-i18n="lblEmail">E-mail officiel</label><input id="email" placeholder="contact@exemple.fr"></div>
+<div><label data-i18n="lblPhone">Téléphone</label><input id="phone" placeholder="+33 ..."></div>
+<div><label data-i18n="lblSiren">SIREN / identifiant</label><input id="siren" placeholder="123456789"></div>
+<div><label data-i18n="lblThreshold">Seuil d'alerte</label>
+<select id="threshold">
+<option value="70" data-i18n="thBalanced">70 — équilibré</option>
+<option value="50" data-i18n="thSensitive">50 — sensible</option>
+<option value="85" data-i18n="thStrict">85 — strict</option>
+</select></div>
+<div><label data-i18n="lblMode">Mode</label>
+<select id="mode">
+<option value="live" data-i18n="modeLive">Live — sources publiques</option>
+<option value="demo" data-i18n="modeDemo">Démo — données simulées</option>
+</select></div>
+</div>
+<div class="actions">
+<button class="primary" onclick="run()" data-i18n="btnRun">🔍 Lancer l'analyse V3</button>
+<button class="secondary" onclick="saveProfile()" data-i18n="btnSave">💾 Sauvegarder le profil</button>
+<button class="secondary" onclick="loadProfile()" data-i18n="btnLoad">↻ Charger</button>
+</div>
+<div id="notice" class="notice" style="margin-top:12px" data-i18n="notice1">La V3 peut interroger des sources publiques depuis le navigateur quand elles autorisent les requêtes cross-origin. Pour une surveillance permanente, il faut un backend/worker.</div>
+</section>
+
+<section id="dash" class="hidden">
+<div class="kpis">
+<div class="kpi"><span class="muted" data-i18n="kpiRisk">Risque global</span><strong id="risk">—</strong><span id="riskBadge"></span></div>
+<div class="kpi"><span class="muted" data-i18n="kpiCandidates">Candidats</span><strong id="candidateCount">0</strong></div>
+<div class="kpi"><span class="muted" data-i18n="kpiExisting">Domaines existants</span><strong id="existing">0</strong></div>
+<div class="kpi"><span class="muted" data-i18n="kpiCerts">Certificats trouvés</span><strong id="certs">0</strong></div>
+<div class="kpi"><span class="muted" data-i18n="kpiAlerts">Alertes</span><strong id="alerts">0</strong></div>
+</div>
+
+<section class="card">
+<h2 data-i18n="step2Title">2. Génération & vérification</h2>
+<div class="progress"><i id="bar"></i></div><p id="progressText" class="muted" data-i18n="progressWaiting">En attente.</p>
+<table><thead><tr>
+<th data-i18n="thCandidate">Candidat</th><th data-i18n="thSource">Source</th><th>RDAP</th><th>CT</th>
+<th data-i18n="thSim">Similarité</th><th data-i18n="thScore">Score</th><th data-i18n="thStatus">Statut</th>
+</tr></thead>
+<tbody id="results"></tbody></table>
+</section>
+
+<section class="card">
+<h2 data-i18n="step3Title">3. Alertes / incidents</h2>
+<div id="incidents" class="muted" data-i18n="noAlert">Aucune alerte.</div>
+<div class="actions">
+<button class="secondary" onclick="exportReport()" data-i18n="btnExport">⬇ Exporter le rapport JSON</button>
+<button class="danger" onclick="clearData()" data-i18n="btnClear">Effacer les données locales</button>
+</div>
+</section>
+
+<section class="card">
+<h2 data-i18n="step4Title">4. Connecteur Cloudflare Brand Protection (optionnel)</h2>
+<p class="muted" data-i18n="step4Text">La V3 prépare le branchement à l'API Brand Protection. La clé API ne doit jamais être intégrée dans un site statique public : utiliser un backend/worker avec secret.</p>
+<div class="grid">
+<div class="span2"><label data-i18n="lblProxy">Endpoint backend proxy</label><input id="proxy" placeholder="https://votre-api.example/brand-protection"></div>
+<div><label data-i18n="lblTag">Tag de surveillance</label><input id="tag" placeholder="ma-marque"></div>
+</div>
+</section>
+</section>
+</main>
+
+<footer>
+  <div class="footer-top">
+    <div class="signature" data-i18n="signature">Conçu et développé par <span>Twagirumukiza</span></div>
+    <div class="footer-links">
+      <a id="linkLegal" data-i18n="linkLegal">Mentions légales</a>
+      <a id="linkCGU" data-i18n="linkCGU">CGU</a>
+      <a id="linkLicense" data-i18n="linkLicense">Licence</a>
+      <a href="https://twagirumukiza.github.io/" target="_blank" rel="noopener">twagirumukiza.github.io</a>
+    </div>
+  </div>
+  <div class="footer-legal" data-i18n="footerNote">Prototype V3. Les appels RDAP/CT sont best-effort depuis le navigateur et dépendent des politiques CORS et de la disponibilité des services. Les résultats ne constituent pas une preuve juridique d'usurpation. Une surveillance 24/7 nécessite un backend planifié, stockage historique, alerting et connecteurs autorisés.</div>
+  <div class="footer-legal" style="margin-top:6px" data-i18n="copyright">© 2026 Twagirumukiza. Tous droits réservés.</div>
+</footer>
+
+<!-- Modals -->
+<div class="modal-overlay hidden" id="modalLegal">
+  <div class="modal">
+    <button class="modal-close" data-close>✕</button>
+    <h2 data-i18n="legalTitle">Mentions légales</h2>
+    <p class="muted" data-i18n="legalTodo">(Modèle à personnaliser avec vos informations exactes avant publication.)</p>
+    <p data-i18n="legalEditor"><strong>Éditeur du site :</strong> Twagirumukiza — Consultant indépendant en cybersécurité, gouvernance, risque et conformité (GRC), basé à Paris, France.</p>
+    <p data-i18n="legalStatus"><strong>Statut :</strong> [à compléter — ex. entrepreneur individuel / société]. <strong>SIREN/SIRET :</strong> [à compléter]. <strong>Adresse :</strong> [à compléter].</p>
+    <p data-i18n="legalContact"><strong>Contact :</strong> [adresse e-mail de contact à compléter].</p>
+    <p data-i18n="legalHost"><strong>Hébergement :</strong> GitHub Pages, GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA.</p>
+    <p data-i18n="legalDirector"><strong>Directeur de la publication :</strong> Twagirumukiza.</p>
+    <p data-i18n="legalIp"><strong>Propriété intellectuelle :</strong> l'ensemble des contenus, textes, code source, visuels et éléments graphiques de ce site sont la propriété de Twagirumukiza, sauf mention contraire, et ne peuvent être reproduits sans autorisation préalable.</p>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modalCGU">
+  <div class="modal">
+    <button class="modal-close" data-close>✕</button>
+    <h2 data-i18n="cguTitle">Conditions Générales d'Utilisation</h2>
+    <p class="muted" data-i18n="legalTodo">(Modèle à personnaliser avec vos informations exactes avant publication.)</p>
+    <p data-i18n="cgu1"><strong>1. Objet.</strong> Le présent outil (« Digital Identity Protection ») est un prototype de veille permettant de générer des variantes de noms de domaine et de vérifier, de manière best-effort, leur existence et leur association à des certificats publics.</p>
+    <p data-i18n="cgu2"><strong>2. Nature du service.</strong> Les résultats affichés sont indicatifs et dépendent de la disponibilité de services tiers (RDAP, Certificate Transparency). Ils ne constituent en aucun cas une preuve juridique d'usurpation d'identité ou de nom de domaine.</p>
+    <p data-i18n="cgu3"><strong>3. Données saisies.</strong> Les informations renseignées (URL, marque, e-mail, téléphone, SIREN) peuvent être stockées localement dans le navigateur de l'utilisateur (localStorage) et ne sont pas transmises à un serveur tiers dans cette version, hors requêtes techniques nécessaires à l'analyse (RDAP, Certificate Transparency).</p>
+    <p data-i18n="cgu4"><strong>4. Responsabilité.</strong> L'éditeur ne saurait être tenu responsable des décisions prises sur la base des résultats de l'outil, ni de l'indisponibilité temporaire des services externes interrogés.</p>
+    <p data-i18n="cgu5"><strong>5. Utilisation.</strong> L'utilisateur s'engage à utiliser cet outil de manière licite, notamment à ne pas l'employer pour harceler, usurper ou nuire à un tiers.</p>
+    <p data-i18n="cgu6"><strong>6. Modification.</strong> Les présentes CGU peuvent être modifiées à tout moment ; la version en vigueur est celle publiée sur cette page.</p>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modalLicense">
+  <div class="modal">
+    <button class="modal-close" data-close>✕</button>
+    <h2 data-i18n="licenseTitle">Licence</h2>
+    <p data-i18n="license1">© 2026 Twagirumukiza. Tous droits réservés.</p>
+    <p data-i18n="license2">Ce site et son code source sont mis à disposition à titre de démonstration. Toute réutilisation, reproduction, distribution ou modification, en tout ou partie, à des fins commerciales ou non, nécessite l'accord écrit préalable de l'auteur.</p>
+    <p class="muted" data-i18n="license3">Vous souhaitez publier ce projet sous une licence open source (MIT, Apache 2.0, etc.) ? Remplacez ce texte par les termes de la licence choisie.</p>
+  </div>
+</div>
+
+<script>
+/* ===================== i18n ===================== */
+const I18N = {
+ fr:{
+  title:"🛡️ Digital Identity Protection V3",
+  subtitle:"Veille domaines · RDAP · Certificate Transparency · scoring · incidents",
+  themeDark:"🌙 Sombre", themeLight:"☀️ Clair",
+  statusReady:"PRÊT", statusAnalysis:"ANALYSE", statusDone:"TERMINÉ", statusError:"ERREUR",
+  step1Title:"1. Définir l'identité à protéger",
+  lblUrl:"URL officielle *", lblBrand:"Nom / marque", phBrand:"Ex. Twagirumukiza",
+  lblEmail:"E-mail officiel", lblPhone:"Téléphone", lblSiren:"SIREN / identifiant",
+  lblThreshold:"Seuil d'alerte", thBalanced:"70 — équilibré", thSensitive:"50 — sensible", thStrict:"85 — strict",
+  lblMode:"Mode", modeLive:"Live — sources publiques", modeDemo:"Démo — données simulées",
+  btnRun:"🔍 Lancer l'analyse V3", btnSave:"💾 Sauvegarder le profil", btnLoad:"↻ Charger",
+  notice1:"La V3 peut interroger des sources publiques depuis le navigateur quand elles autorisent les requêtes cross-origin. Pour une surveillance permanente, il faut un backend/worker.",
+  kpiRisk:"Risque global", kpiCandidates:"Candidats", kpiExisting:"Domaines existants", kpiCerts:"Certificats trouvés", kpiAlerts:"Alertes",
+  step2Title:"2. Génération & vérification", progressWaiting:"En attente.",
+  thCandidate:"Candidat", thSource:"Source", thSim:"Similarité", thScore:"Score", thStatus:"Statut",
+  step3Title:"3. Alertes / incidents", noAlert:"Aucune alerte.",
+  btnExport:"⬇ Exporter le rapport JSON", btnClear:"Effacer les données locales",
+  step4Title:"4. Connecteur Cloudflare Brand Protection (optionnel)",
+  step4Text:"La V3 prépare le branchement à l'API Brand Protection. La clé API ne doit jamais être intégrée dans un site statique public : utiliser un backend/worker avec secret.",
+  lblProxy:"Endpoint backend proxy", lblTag:"Tag de surveillance",
+  signature:'Conçu et développé par <span>Twagirumukiza</span>',
+  linkLegal:"Mentions légales", linkCGU:"CGU", linkLicense:"Licence",
+  footerNote:"Prototype V3. Les appels RDAP/CT sont best-effort depuis le navigateur et dépendent des politiques CORS et de la disponibilité des services. Les résultats ne constituent pas une preuve juridique d'usurpation. Une surveillance 24/7 nécessite un backend planifié, stockage historique, alerting et connecteurs autorisés.",
+  copyright:"© 2026 Twagirumukiza. Tous droits réservés.",
+  legalTitle:"Mentions légales", legalTodo:"(Modèle à personnaliser avec vos informations exactes avant publication.)",
+  legalEditor:"<strong>Éditeur du site :</strong> Twagirumukiza — Consultant indépendant en cybersécurité, gouvernance, risque et conformité (GRC), basé à Paris, France.",
+  legalStatus:"<strong>Statut :</strong> [à compléter — ex. entrepreneur individuel / société]. <strong>SIREN/SIRET :</strong> [à compléter]. <strong>Adresse :</strong> [à compléter].",
+  legalContact:"<strong>Contact :</strong> [adresse e-mail de contact à compléter].",
+  legalHost:"<strong>Hébergement :</strong> GitHub Pages, GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA.",
+  legalDirector:"<strong>Directeur de la publication :</strong> Twagirumukiza.",
+  legalIp:"<strong>Propriété intellectuelle :</strong> l'ensemble des contenus, textes, code source, visuels et éléments graphiques de ce site sont la propriété de Twagirumukiza, sauf mention contraire, et ne peuvent être reproduits sans autorisation préalable.",
+  cguTitle:"Conditions Générales d'Utilisation",
+  cgu1:"<strong>1. Objet.</strong> Le présent outil (« Digital Identity Protection ») est un prototype de veille permettant de générer des variantes de noms de domaine et de vérifier, de manière best-effort, leur existence et leur association à des certificats publics.",
+  cgu2:"<strong>2. Nature du service.</strong> Les résultats affichés sont indicatifs et dépendent de la disponibilité de services tiers (RDAP, Certificate Transparency). Ils ne constituent en aucun cas une preuve juridique d'usurpation d'identité ou de nom de domaine.",
+  cgu3:"<strong>3. Données saisies.</strong> Les informations renseignées (URL, marque, e-mail, téléphone, SIREN) peuvent être stockées localement dans le navigateur de l'utilisateur (localStorage) et ne sont pas transmises à un serveur tiers dans cette version, hors requêtes techniques nécessaires à l'analyse (RDAP, Certificate Transparency).",
+  cgu4:"<strong>4. Responsabilité.</strong> L'éditeur ne saurait être tenu responsable des décisions prises sur la base des résultats de l'outil, ni de l'indisponibilité temporaire des services externes interrogés.",
+  cgu5:"<strong>5. Utilisation.</strong> L'utilisateur s'engage à utiliser cet outil de manière licite, notamment à ne pas l'employer pour harceler, usurper ou nuire à un tiers.",
+  cgu6:"<strong>6. Modification.</strong> Les présentes CGU peuvent être modifiées à tout moment ; la version en vigueur est celle publiée sur cette page.",
+  licenseTitle:"Licence",
+  license1:"© 2026 Twagirumukiza. Tous droits réservés.",
+  license2:"Ce site et son code source sont mis à disposition à titre de démonstration. Toute réutilisation, reproduction, distribution ou modification, en tout ou partie, à des fins commerciales ou non, nécessite l'accord écrit préalable de l'auteur.",
+  license3:"Vous souhaitez publier ce projet sous une licence open source (MIT, Apache 2.0, etc.) ? Remplacez ce texte par les termes de la licence choisie.",
+  rdapExists:"✓ existe", rdapFree:"— libre", rdapUnknown:"?",
+  statusCritical:"🔴 critique", statusReview:"🟠 à vérifier", statusLow:"🟢 faible",
+  riskHigh:"RISQUE ÉLEVÉ", riskWatch:"SURVEILLANCE", riskLow:"FAIBLE",
+  alertLabel:"ALERTE", alertVerify:"Vérifier avant toute action de takedown.",
+  noAlertThreshold:"Aucune alerte au-dessus du seuil.",
+  errRun:"Impossible de lancer l'analyse : ",
+  savedProfile:"Profil sauvegardé localement.", noProfile:"Aucun profil sauvegardé.",
+  verifying:"Vérification"
+ },
+ en:{
+  title:"🛡️ Digital Identity Protection V3",
+  subtitle:"Domain monitoring · RDAP · Certificate Transparency · scoring · incidents",
+  themeDark:"🌙 Dark", themeLight:"☀️ Light",
+  statusReady:"READY", statusAnalysis:"ANALYZING", statusDone:"DONE", statusError:"ERROR",
+  step1Title:"1. Define the identity to protect",
+  lblUrl:"Official URL *", lblBrand:"Name / brand", phBrand:"e.g. Twagirumukiza",
+  lblEmail:"Official e-mail", lblPhone:"Phone", lblSiren:"Company ID",
+  lblThreshold:"Alert threshold", thBalanced:"70 — balanced", thSensitive:"50 — sensitive", thStrict:"85 — strict",
+  lblMode:"Mode", modeLive:"Live — public sources", modeDemo:"Demo — simulated data",
+  btnRun:"🔍 Run V3 analysis", btnSave:"💾 Save profile", btnLoad:"↻ Load",
+  notice1:"V3 can query public sources from the browser when they allow cross-origin requests. Continuous monitoring requires a backend/worker.",
+  kpiRisk:"Overall risk", kpiCandidates:"Candidates", kpiExisting:"Existing domains", kpiCerts:"Certificates found", kpiAlerts:"Alerts",
+  step2Title:"2. Generation & verification", progressWaiting:"Waiting.",
+  thCandidate:"Candidate", thSource:"Source", thSim:"Similarity", thScore:"Score", thStatus:"Status",
+  step3Title:"3. Alerts / incidents", noAlert:"No alerts.",
+  btnExport:"⬇ Export JSON report", btnClear:"Clear local data",
+  step4Title:"4. Cloudflare Brand Protection connector (optional)",
+  step4Text:"V3 prepares the connection to the Brand Protection API. The API key must never be embedded in a public static site: use a backend/worker with a secret.",
+  lblProxy:"Backend proxy endpoint", lblTag:"Monitoring tag",
+  signature:'Designed and built by <span>Twagirumukiza</span>',
+  linkLegal:"Legal notice", linkCGU:"Terms of use", linkLicense:"License",
+  footerNote:"V3 prototype. RDAP/CT calls are best-effort from the browser and depend on CORS policies and service availability. Results do not constitute legal proof of impersonation. 24/7 monitoring requires a scheduled backend, historical storage, alerting and authorized connectors.",
+  copyright:"© 2026 Twagirumukiza. All rights reserved.",
+  legalTitle:"Legal notice", legalTodo:"(Template — replace with your exact details before publishing.)",
+  legalEditor:"<strong>Site publisher:</strong> Twagirumukiza — Independent cybersecurity, governance, risk and compliance (GRC) consultant, based in Paris, France.",
+  legalStatus:"<strong>Legal status:</strong> [to complete — e.g. sole trader / company]. <strong>Company ID:</strong> [to complete]. <strong>Address:</strong> [to complete].",
+  legalContact:"<strong>Contact:</strong> [contact e-mail to complete].",
+  legalHost:"<strong>Hosting:</strong> GitHub Pages, GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA.",
+  legalDirector:"<strong>Publication director:</strong> Twagirumukiza.",
+  legalIp:"<strong>Intellectual property:</strong> all content, text, source code, visuals and graphic elements of this site are the property of Twagirumukiza, unless stated otherwise, and may not be reproduced without prior authorization.",
+  cguTitle:"Terms of Use",
+  cgu1:"<strong>1. Purpose.</strong> This tool (\"Digital Identity Protection\") is a monitoring prototype that generates domain-name variants and checks, on a best-effort basis, whether they exist and are associated with public certificates.",
+  cgu2:"<strong>2. Nature of the service.</strong> Displayed results are indicative and depend on the availability of third-party services (RDAP, Certificate Transparency). They do not constitute legal proof of identity or domain-name impersonation.",
+  cgu3:"<strong>3. Data entered.</strong> Information entered (URL, brand, e-mail, phone, company ID) may be stored locally in the user's browser (localStorage) and is not sent to a third-party server in this version, except for technical requests required for the analysis (RDAP, Certificate Transparency).",
+  cgu4:"<strong>4. Liability.</strong> The publisher cannot be held liable for decisions made based on the tool's results, nor for the temporary unavailability of the external services queried.",
+  cgu5:"<strong>5. Use.</strong> The user agrees to use this tool lawfully, in particular not to use it to harass, impersonate or harm a third party.",
+  cgu6:"<strong>6. Changes.</strong> These Terms of Use may be changed at any time; the version in force is the one published on this page.",
+  licenseTitle:"License",
+  license1:"© 2026 Twagirumukiza. All rights reserved.",
+  license2:"This site and its source code are provided for demonstration purposes. Any reuse, reproduction, distribution or modification, in whole or in part, for commercial or non-commercial purposes, requires the author's prior written consent.",
+  license3:"Want to publish this project under an open-source license (MIT, Apache 2.0, etc.)? Replace this text with the terms of the chosen license.",
+  rdapExists:"✓ exists", rdapFree:"— available", rdapUnknown:"?",
+  statusCritical:"🔴 critical", statusReview:"🟠 to review", statusLow:"🟢 low",
+  riskHigh:"HIGH RISK", riskWatch:"MONITOR", riskLow:"LOW",
+  alertLabel:"ALERT", alertVerify:"Verify before any takedown action.",
+  noAlertThreshold:"No alerts above the threshold.",
+  errRun:"Could not run the analysis: ",
+  savedProfile:"Profile saved locally.", noProfile:"No saved profile.",
+  verifying:"Checking"
+ }
+};
+let currentLang = localStorage.getItem("dip-lang") || "fr";
+
+function applyLanguage(){
+ const dict = I18N[currentLang];
+ document.documentElement.lang = currentLang;
+ document.querySelectorAll("[data-i18n]").forEach(el=>{
+  const key = el.getAttribute("data-i18n");
+  if(dict[key]!==undefined) el.innerHTML = dict[key];
+ });
+ document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+  const key = el.getAttribute("data-i18n-placeholder");
+  if(dict[key]!==undefined) el.setAttribute("placeholder", dict[key]);
+ });
+ document.getElementById("themeToggle").innerHTML = document.body.getAttribute("data-theme")==="dark" ? dict.themeLight : dict.themeDark;
+ document.getElementById("langFR").classList.toggle("active", currentLang==="fr");
+ document.getElementById("langEN").classList.toggle("active", currentLang==="en");
+ localStorage.setItem("dip-lang", currentLang);
+}
+document.getElementById("langFR").addEventListener("click",()=>{currentLang="fr";applyLanguage();});
+document.getElementById("langEN").addEventListener("click",()=>{currentLang="en";applyLanguage();});
+
+/* ===================== Theme (light/dark) ===================== */
+function applyTheme(t){
+ document.body.setAttribute("data-theme", t);
+ document.documentElement.setAttribute("data-theme", t);
+ localStorage.setItem("dip-theme", t);
+ const dict = I18N[currentLang];
+ document.getElementById("themeToggle").innerHTML = t==="dark" ? dict.themeLight : dict.themeDark;
+}
+document.getElementById("themeToggle").addEventListener("click",()=>{
+ const cur = document.body.getAttribute("data-theme")==="dark" ? "light" : "dark";
+ applyTheme(cur);
+});
+
+/* ===================== Font size ===================== */
+const FONT_STEPS = [87.5,100,112.5,125,137.5];
+let fontIdx = Number(localStorage.getItem("dip-font-idx"));
+if(isNaN(fontIdx) || fontIdx<0 || fontIdx>=FONT_STEPS.length) fontIdx = 1;
+function applyFont(){
+ document.documentElement.style.fontSize = FONT_STEPS[fontIdx]+"%";
+ localStorage.setItem("dip-font-idx", fontIdx);
+}
+document.getElementById("fontPlus").addEventListener("click",()=>{if(fontIdx<FONT_STEPS.length-1)fontIdx++;applyFont();});
+document.getElementById("fontMinus").addEventListener("click",()=>{if(fontIdx>0)fontIdx--;applyFont();});
+document.getElementById("fontReset").addEventListener("click",()=>{fontIdx=1;applyFont();});
+
+/* ===================== Burger menu ===================== */
+const burgerBtn = document.getElementById("burgerBtn");
+const toolbar = document.getElementById("toolbar");
+burgerBtn.addEventListener("click",()=>{
+ const open = toolbar.classList.toggle("open");
+ burgerBtn.setAttribute("aria-expanded", open?"true":"false");
+});
+
+/* ===================== Legal modals ===================== */
+function openModal(id){document.getElementById(id).classList.remove("hidden");}
+function closeModal(el){el.closest(".modal-overlay").classList.add("hidden");}
+document.getElementById("linkLegal").addEventListener("click",()=>openModal("modalLegal"));
+document.getElementById("linkCGU").addEventListener("click",()=>openModal("modalCGU"));
+document.getElementById("linkLicense").addEventListener("click",()=>openModal("modalLicense"));
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b)));
+document.querySelectorAll(".modal-overlay").forEach(ov=>ov.addEventListener("click",e=>{if(e.target===ov)ov.classList.add("hidden");}));
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".modal-overlay").forEach(ov=>ov.classList.add("hidden"));});
+
+/* ===================== Init on load ===================== */
+(function init(){
+ applyTheme(localStorage.getItem("dip-theme") || "light");
+ applyFont();
+ applyLanguage();
+})();
+
+/* ===================== Original DIP engine (unchanged logic, translated strings) ===================== */
+const state={profile:{},candidates:[],results:[],started:null};
+const conf={а:"a",ɑ:"a",α:"a",с:"c",ϲ:"c",е:"e",ε:"e",о:"o",ο:"o",р:"p",ρ:"p",ѕ:"s",і:"i",ι:"i",ⅼ:"l",ӏ:"l"};
+function norm(s){return (s||"").toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}-]/gu,"")}
+function urlObj(){let x=document.getElementById("url").value.trim();if(!/^https?:\/\//i.test(x))x="https://"+x;return new URL(x)}
+function domain(){return urlObj().hostname.replace(/^www\./,"").toLowerCase()}
+function base(){return domain().split(".")[0]}
+function sim(a,b){a=norm(a);b=norm(b);let d=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));for(let i=0;i<=a.length;i++)d[i][0]=i;for(let j=0;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return Math.round((1-d[a.length][b.length]/Math.max(a.length,b.length,1))*100)}
+function variants(b){
+ let s=new Set(), chars=b.split("");
+ for(let i=0;i<b.length;i++){s.add(b.slice(0,i)+b.slice(i+1));s.add(b.slice(0,i)+b[i]+b.slice(i));if(i+1<b.length)s.add(b.slice(0,i)+b[i+1]+b[i]+b.slice(i+2))}
+ ["secure","support","login","payment","pay","service","conseil","official","verify"].forEach(x=>{s.add(b+"-"+x);s.add(x+"-"+b)});
+ for(let i=0;i<b.length;i++){let arr=chars.slice();if(conf[arr[i]]){arr[i]=Object.keys(conf).find(k=>conf[k]===arr[i])||arr[i];s.add(arr.join(""))}}
+ return [...s].filter(x=>x&&x!==b).slice(0,120)
+}
+async function rdap(d){
+ try{
+  let r=await fetch("https://rdap.org/domain/"+encodeURIComponent(d),{headers:{"Accept":"application/rdap+json"}});
+  if(!r.ok)return {exists:false};
+  let j=await r.json();return {exists:true,status:j.status||[],events:j.events||[],registrar:(j.entities||[]).map(e=>e.roles||[]).flat().includes("registrar")};
+ }catch(e){return {exists:null,error:"CORS/API indisponible"}}
+}
+async function ct(q){
+ try{
+  let r=await fetch("https://crt.sh/?q="+encodeURIComponent("%."+q)+"&output=json");if(!r.ok)return [];
+  let j=await r.json();return Array.isArray(j)?j:[]
+ }catch(e){return []}
+}
+function setStatus(x){document.getElementById("status").textContent=x}
+function row(x){
+ const dict=I18N[currentLang];
+ let cls=x.score>=85?"red":x.score>=Number(document.getElementById("threshold").value)?"orange":"green";
+ let rdapTxt = x.rdap===true?dict.rdapExists:x.rdap===false?dict.rdapFree:dict.rdapUnknown;
+ let statusTxt = x.score>=85?dict.statusCritical:x.score>=70?dict.statusReview:dict.statusLow;
+ return `<tr><td><b>${x.domain}</b></td><td>${x.source}</td><td>${rdapTxt}</td><td>${x.ct?"✓":"—"}</td><td>${x.sim}%</td><td><span class="badge ${cls}">${x.score}/100</span></td><td>${statusTxt}</td></tr>`
+}
+async function run(){
+ const dict=I18N[currentLang];
+ try{
+  let u=urlObj(), d=domain(), b=base();
+  state.profile={url:u.href,domain:d,brand:document.getElementById("brand").value.trim()||b,email:document.getElementById("email").value.trim(),phone:document.getElementById("phone").value.trim(),siren:document.getElementById("siren").value.trim(),threshold:+document.getElementById("threshold").value};
+  state.started=new Date().toISOString();state.candidates=variants(b).map(v=>v+".com");
+  document.getElementById("dash").classList.remove("hidden");setStatus(dict.statusAnalysis);document.getElementById("candidateCount").textContent=state.candidates.length;
+  let ctData=await ct(d);document.getElementById("certs").textContent=ctData.length;
+  let rows=[];let existing=0,alerts=0;
+  for(let i=0;i<state.candidates.length;i++){
+   let cd=state.candidates[i], r=await rdap(cd), s=sim(b,cd.split(".")[0]);
+   let score=Math.min(99,Math.max(1,s+(r.exists===true?10:0)+(ctData.some(z=>(z.name_value||"").toLowerCase().includes(cd))?10:0)));
+   let x={domain:cd,source:currentLang==="fr"?"générateur V3":"V3 generator",rdap:r.exists,ct:ctData.some(z=>(z.name_value||"").toLowerCase().includes(cd)),sim:s,score};
+   state.results.push(x);if(r.exists===true)existing++;if(score>=state.profile.threshold)alerts++;
+   rows.push(row(x));document.getElementById("results").innerHTML=rows.join("");
+   document.getElementById("bar").style.width=Math.round((i+1)/state.candidates.length*100)+"%";
+   document.getElementById("progressText").textContent=`${dict.verifying} ${i+1}/${state.candidates.length} — ${cd}`;
+  }
+  document.getElementById("existing").textContent=existing;document.getElementById("alerts").textContent=alerts;
+  let top=state.results.length?Math.max(...state.results.map(x=>x.score)):0;
+  document.getElementById("risk").textContent=top+"/100";
+  document.getElementById("riskBadge").innerHTML=`<span class="badge ${top>=85?"red":top>=70?"orange":"green"}">${top>=85?dict.riskHigh:top>=70?dict.riskWatch:dict.riskLow}</span>`;
+  document.getElementById("incidents").innerHTML=state.results.filter(x=>x.score>=state.profile.threshold).slice(0,12).map(x=>`<p><span class="badge red">${dict.alertLabel}</span> <b>${x.domain}</b> — ${x.score}/100. <span class="muted">${dict.alertVerify}</span></p>`).join("")||dict.noAlertThreshold;
+  setStatus(dict.statusDone);
+ }catch(e){alert(dict.errRun+e.message);setStatus(dict.statusError)}
+}
+function saveProfile(){localStorage.setItem("dipv3-profile",JSON.stringify({url:document.getElementById("url").value,brand:document.getElementById("brand").value,email:document.getElementById("email").value,phone:document.getElementById("phone").value,siren:document.getElementById("siren").value}));alert(I18N[currentLang].savedProfile)}
+function loadProfile(){let x=JSON.parse(localStorage.getItem("dipv3-profile")||"null");if(!x){alert(I18N[currentLang].noProfile);return}for(let k of ["url","brand","email","phone","siren"])document.getElementById(k).value=x[k]||""}
+function exportReport(){let r={product:"Digital Identity Protection",version:"3.0",author:"Twagirumukiza",generated_at:new Date().toISOString(),profile:state.profile,results:state.results,limitations:"Best-effort browser checks; CORS and service availability apply."};let b=new Blob([JSON.stringify(r,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="DIP-V3-rapport.json";a.click()}
+function clearData(){localStorage.removeItem("dipv3-profile");location.reload()}
+</script>
+</body>
+</html>
