@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIP — Espace client</title>
+<link rel="stylesheet" href="../assets/theme.css">
+<style>
+.brand-list{display:flex;flex-direction:column;gap:8px}
+.brand-row{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.brand-row:hover{border-color:var(--blue)}
+.brand-row.active{border-color:var(--blue);background:#2563eb0d}
+.brand-row .name{font-weight:800}
+.wl-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem}
+.wl-row:last-child{border-bottom:0}
+.tier-badge{font-size:.7rem;font-weight:900;padding:3px 8px;border-radius:999px}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand-link" href="../">
+    <div class="brand">
+      <h1 data-i18n="title">🛡️ Espace client — DIP</h1>
+      <small data-i18n="subtitle">Surveillance planifiée, historique, alertes</small>
+    </div>
+  </a>
+  <button class="burger" id="burgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
+  <nav class="toolbar" id="toolbar">
+    <div class="fontgrp" role="group" aria-label="Taille du texte">
+      <button id="fontMinus">A-</button><button id="fontReset">A</button><button id="fontPlus">A+</button>
+    </div>
+    <button class="tool-btn" id="themeToggle">🌙 Sombre</button>
+    <div class="fontgrp" role="group" aria-label="Langue">
+      <button class="tool-btn" id="langFR">FR</button><button class="tool-btn" id="langEN">EN</button>
+    </div>
+    <button class="tool-btn hidden" id="logoutBtn" data-i18n="btnLogout">Déconnexion</button>
+  </nav>
+</header>
+<main>
+
+<section class="card" id="loginCard">
+<h2 data-i18n="loginTitle">Connexion</h2>
+<p class="muted" data-i18n="loginText">Reçois un lien de connexion par e-mail, aucun mot de passe à retenir.</p>
+<div class="grid">
+<div class="span2"><label data-i18n="lblEmail">E-mail</label><input id="loginEmail" type="email" placeholder="vous@exemple.fr"></div>
+</div>
+<div class="actions"><button class="primary" onclick="sendMagicLink()" data-i18n="btnSendLink">Envoyer le lien de connexion</button></div>
+<p class="muted" id="loginStatus" style="margin-top:10px"></p>
+</section>
+
+<section class="hidden" id="appArea">
+<section class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+<div><span class="muted" data-i18n="connectedAs">Connecté en tant que</span> <strong id="userEmail"></strong></div>
+<span class="tier-badge blue" id="tierBadge">—</span>
+</div>
+</section>
+
+<div class="grid" style="grid-template-columns:1fr 2fr">
+<section class="card">
+<h2 data-i18n="brandsTitle">Vos marques</h2>
+<div class="brand-list" id="brandList"></div>
+<hr style="border:none;border-top:1px solid var(--line);margin:14px 0">
+<h3 style="font-size:.85rem" data-i18n="addBrandTitle">Ajouter une marque</h3>
+<label data-i18n="lblBrandName">Nom</label><input id="newBrandName" placeholder="Ex. Twagirumukiza">
+<label style="margin-top:8px" data-i18n="lblUrl">URL officielle *</label><input id="newBrandUrl" placeholder="https://exemple.fr">
+<label style="margin-top:8px" data-i18n="lblAlertEmail">E-mail d'alerte</label><input id="newBrandAlertEmail" type="email" placeholder="alerte@exemple.fr">
+<div class="actions"><button class="primary" onclick="addBrand()" data-i18n="btnAddBrand">Ajouter</button></div>
+</section>
+
+<section id="brandDetail" class="hidden">
+<section class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+<h2 id="brandDetailName" style="margin:0"></h2>
+<button class="secondary" onclick="triggerScan()" id="scanBtn" data-i18n="btnScanNow">🔍 Scanner maintenant</button>
+</div>
+<div class="kpis" style="margin-top:14px">
+<div class="kpi"><span class="muted" data-i18n="kpiCandidates">Candidats</span><strong id="dCandidates">—</strong></div>
+<div class="kpi"><span class="muted" data-i18n="kpiExisting">Existants</span><strong id="dExisting">—</strong></div>
+<div class="kpi"><span class="muted" data-i18n="kpiSuspects">Suspects</span><strong id="dSuspects">—</strong></div>
+<div class="kpi"><span class="muted" data-i18n="kpiAlerts">Confirmées</span><strong id="dConfirmed">—</strong></div>
+</div>
+<p class="muted" id="lastScanDate" style="margin-top:10px"></p>
+</section>
+
+<section class="card">
+<h2 data-i18n="historyTitle">Historique des scans</h2>
+<table><thead><tr>
+<th data-i18n="thDate">Date</th><th data-i18n="kpiCandidates">Candidats</th><th data-i18n="kpiExisting">Existants</th>
+<th data-i18n="kpiSuspects">Suspects</th><th data-i18n="kpiAlerts">Confirmées</th>
+</tr></thead><tbody id="historyBody"></tbody></table>
+</section>
+
+<section class="card">
+<h2 data-i18n="latestResultsTitle">Derniers résultats</h2>
+<table><thead><tr>
+<th data-i18n="thCandidate">Candidat</th><th>RDAP</th><th>CT</th><th>DNS</th>
+<th data-i18n="thSim">Similarité</th><th data-i18n="thScore">Score</th><th data-i18n="thStatus">Statut</th><th></th>
+</tr></thead><tbody id="resultsBody"></tbody></table>
+</section>
+
+<section class="card">
+<h2 data-i18n="whitelistTitle">Liste blanche</h2>
+<p class="muted" data-i18n="whitelistText">Marque un domaine comme vérifié pour qu'il n'apparaisse plus comme suspect.</p>
+<div id="whitelistRows"></div>
+<div class="actions" style="margin-top:10px">
+<input id="wlDomain" placeholder="exemple-secure.com" style="max-width:260px">
+<button class="secondary" onclick="addWhitelist()" data-i18n="btnAddWhitelist">Ajouter à la liste blanche</button>
+</div>
+</section>
+</section>
+</div>
+</section>
+
+</main>
+
+<footer>
+  <div class="footer-top">
+    <div class="signature" data-i18n="signature">Conçu et développé par <span>Twagirumukiza</span></div>
+    <div class="footer-links">
+      <a id="linkLegal" data-i18n="linkLegal">Mentions légales</a>
+      <a id="linkCGU" data-i18n="linkCGU">CGU</a>
+      <a id="linkLicense" data-i18n="linkLicense">Licence</a>
+    </div>
+  </div>
+  <div class="footer-legal" data-i18n="copyright">© 2026 Twagirumukiza. Tous droits réservés.</div>
+</footer>
+
+<div id="legalModals"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../assets/i18n-legal.js"></script>
+<script>
+window.PAGE_I18N = {
+ fr: {
+  title:"🛡️ Espace client — DIP", subtitle:"Surveillance planifiée, historique, alertes",
+  btnLogout:"Déconnexion",
+  loginTitle:"Connexion", loginText:"Reçois un lien de connexion par e-mail, aucun mot de passe à retenir.",
+  lblEmail:"E-mail", btnSendLink:"Envoyer le lien de connexion",
+  linkSent:"Lien envoyé — vérifie ta boîte mail.", linkError:"Impossible d'envoyer le lien : ",
+  connectedAs:"Connecté en tant que",
+  brandsTitle:"Vos marques", addBrandTitle:"Ajouter une marque",
+  lblBrandName:"Nom", lblUrl:"URL officielle *", lblAlertEmail:"E-mail d'alerte",
+  btnAddBrand:"Ajouter", noBrands:"Aucune marque pour l'instant.",
+  btnScanNow:"🔍 Scanner maintenant", scanning:"Scan en cours…", scanDone:"Scan terminé.", scanError:"Erreur de scan : ",
+  kpiCandidates:"Candidats", kpiExisting:"Existants", kpiSuspects:"Suspects", kpiAlerts:"Confirmées",
+  lastScanOn:"Dernier scan le",
+  historyTitle:"Historique des scans", thDate:"Date",
+  latestResultsTitle:"Derniers résultats", thCandidate:"Candidat", thSim:"Similarité", thScore:"Score", thStatus:"Statut",
+  statusNotRegistered:"🟢 non enregistré", statusMonitor:"🟡 à surveiller", statusSuspect:"🟠 suspect", statusConfirmed:"🔴 menace confirmée",
+  whitelistTitle:"Liste blanche", whitelistText:"Marque un domaine comme vérifié pour qu'il n'apparaisse plus comme suspect.",
+  btnAddWhitelist:"Ajouter à la liste blanche", btnRemove:"Retirer", noWhitelist:"Aucun domaine en liste blanche.",
+  tierFree:"GRATUIT", tierPro:"PRO", tierCabinet:"CABINET",
+  fillUrl:"Merci de renseigner une URL.", noBrandSelected:"Sélectionne d'abord une marque.",
+ },
+ en: {
+  title:"🛡️ Client area — DIP", subtitle:"Scheduled monitoring, history, alerts",
+  btnLogout:"Log out",
+  loginTitle:"Sign in", loginText:"Get a sign-in link by e-mail, no password to remember.",
+  lblEmail:"E-mail", btnSendLink:"Send sign-in link",
+  linkSent:"Link sent — check your inbox.", linkError:"Could not send the link: ",
+  connectedAs:"Signed in as",
+  brandsTitle:"Your brands", addBrandTitle:"Add a brand",
+  lblBrandName:"Name", lblUrl:"Official URL *", lblAlertEmail:"Alert e-mail",
+  btnAddBrand:"Add", noBrands:"No brand yet.",
+  btnScanNow:"🔍 Scan now", scanning:"Scanning…", scanDone:"Scan complete.", scanError:"Scan error: ",
+  kpiCandidates:"Candidates", kpiExisting:"Existing", kpiSuspects:"Suspicious", kpiAlerts:"Confirmed",
+  lastScanOn:"Last scan on",
+  historyTitle:"Scan history", thDate:"Date",
+  latestResultsTitle:"Latest results", thCandidate:"Candidate", thSim:"Similarity", thScore:"Score", thStatus:"Status",
+  statusNotRegistered:"🟢 not registered", statusMonitor:"🟡 to monitor", statusSuspect:"🟠 suspicious", statusConfirmed:"🔴 confirmed threat",
+  whitelistTitle:"Whitelist", whitelistText:"Mark a domain as verified so it no longer shows as suspicious.",
+  btnAddWhitelist:"Add to whitelist", btnRemove:"Remove", noWhitelist:"No whitelisted domain.",
+  tierFree:"FREE", tierPro:"PRO", tierCabinet:"FIRM",
+  fillUrl:"Please enter a URL.", noBrandSelected:"Select a brand first.",
+ }
+};
+</script>
+<script src="../assets/common.js"></script>
+<script>
+DIP.init("../");
+
+// ⚠️ À remplacer après création du projet Supabase (Settings > API)
+const SUPABASE_URL = "https://<PROJECT_REF>.supabase.co";
+const SUPABASE_ANON_KEY = "<ANON_KEY>";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null, currentSession = null, brands = [], selectedBrandId = null;
+
+async function sendMagicLink() {
+ const email = document.getElementById("loginEmail").value.trim();
+ if (!email) return;
+ const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+ document.getElementById("loginStatus").textContent = error ? DIP.t("linkError") + error.message : DIP.t("linkSent");
+}
+
+async function logout() { await sb.auth.signOut(); location.reload(); }
+document.getElementById("logoutBtn").addEventListener("click", logout);
+
+function tierLabel(tier) { return { free: DIP.t("tierFree"), pro: DIP.t("tierPro"), cabinet: DIP.t("tierCabinet") }[tier] || tier; }
+
+async function loadProfile() {
+ const { data } = await sb.from("profiles").select("subscription_tier").eq("id", currentUser.id).single();
+ const tier = data?.subscription_tier || "free";
+ const badge = document.getElementById("tierBadge");
+ badge.textContent = tierLabel(tier);
+ badge.className = "tier-badge " + (tier === "free" ? "blue" : "green");
+}
+
+async function loadBrands() {
+ const { data, error } = await sb.from("brands").select("*").order("created_at", { ascending: false });
+ brands = data || [];
+ const list = document.getElementById("brandList");
+ list.innerHTML = brands.length ? "" : `<p class="muted">${DIP.t("noBrands")}</p>`;
+ brands.forEach((b) => {
+  const row = document.createElement("div");
+  row.className = "brand-row" + (b.id === selectedBrandId ? " active" : "");
+  row.innerHTML = `<span class="name">${b.name}</span><span class="muted">${b.tlds.join(", ")}</span>`;
+  row.addEventListener("click", () => selectBrand(b.id));
+  list.appendChild(row);
+ });
+ if (!selectedBrandId && brands.length) selectBrand(brands[0].id);
+}
+
+async function addBrand() {
+ const name = document.getElementById("newBrandName").value.trim();
+ const url = document.getElementById("newBrandUrl").value.trim();
+ const alertEmail = document.getElementById("newBrandAlertEmail").value.trim();
+ if (!url) { alert(DIP.t("fillUrl")); return; }
+ const { error } = await sb.from("brands").insert({
+  owner_id: currentUser.id, name: name || url, url, alert_email: alertEmail || null,
+ });
+ if (error) { alert(error.message); return; }
+ document.getElementById("newBrandName").value = "";
+ document.getElementById("newBrandUrl").value = "";
+ document.getElementById("newBrandAlertEmail").value = "";
+ await loadBrands();
+}
+
+async function selectBrand(id) {
+ selectedBrandId = id;
+ document.getElementById("brandDetail").classList.remove("hidden");
+ const brand = brands.find((b) => b.id === id);
+ document.getElementById("brandDetailName").textContent = brand ? brand.name : "";
+ await Promise.all([loadHistory(id), loadLatestResults(id), loadWhitelist(id)]);
+ await loadBrands(); // pour rafraîchir le surlignage "active"
+}
+
+async function loadHistory(brandId) {
+ const { data } = await sb.from("scans").select("*").eq("brand_id", brandId).order("started_at", { ascending: false }).limit(20);
+ const rows = data || [];
+ const tbody = document.getElementById("historyBody");
+ tbody.innerHTML = rows.map((s) => `<tr><td>${new Date(s.started_at).toLocaleString(DIP.getLang())}</td><td>${s.candidate_count ?? "—"}</td><td>${s.existing_count ?? "—"}</td><td>${s.suspect_count ?? "—"}</td><td>${s.confirmed_count ?? "—"}</td></tr>`).join("");
+ if (rows[0]) {
+  document.getElementById("dCandidates").textContent = rows[0].candidate_count ?? "—";
+  document.getElementById("dExisting").textContent = rows[0].existing_count ?? "—";
+  document.getElementById("dSuspects").textContent = rows[0].suspect_count ?? "—";
+  document.getElementById("dConfirmed").textContent = rows[0].confirmed_count ?? "—";
+  document.getElementById("lastScanDate").textContent = `${DIP.t("lastScanOn")} ${new Date(rows[0].started_at).toLocaleString(DIP.getLang())}`;
+ } else {
+  ["dCandidates","dExisting","dSuspects","dConfirmed"].forEach((id) => document.getElementById(id).textContent = "—");
+  document.getElementById("lastScanDate").textContent = "";
+ }
+}
+
+async function loadLatestResults(brandId) {
+ const { data: lastScan } = await sb.from("scans").select("id").eq("brand_id", brandId).order("started_at", { ascending: false }).limit(1).single();
+ const tbody = document.getElementById("resultsBody");
+ if (!lastScan) { tbody.innerHTML = ""; return; }
+ const { data } = await sb.from("scan_results").select("*").eq("scan_id", lastScan.id).order("score", { ascending: false });
+ const labels = { green: DIP.t("statusNotRegistered"), yellow: DIP.t("statusMonitor"), orange: DIP.t("statusSuspect"), red: DIP.t("statusConfirmed") };
+ tbody.innerHTML = (data || []).map((x) => `<tr><td><b>${x.domain}</b></td><td>${x.rdap_exists===true?"✓":x.rdap_exists===false?"—":"?"}</td><td>${x.has_cert?"✓":"—"}</td><td>${x.dns_resolves?"✓":"—"}</td><td>${x.similarity}%</td><td><span class="badge ${x.level}">${x.score}/100</span></td><td>${labels[x.level]}</td><td>${x.level!=="green"?`<button class="secondary" style="padding:4px 8px;font-size:.7rem" onclick="quickWhitelist('${x.domain}')">${DIP.t("btnAddWhitelist")}</button>`:""}</td></tr>`).join("");
+}
+
+async function loadWhitelist(brandId) {
+ const { data } = await sb.from("whitelist").select("*").eq("brand_id", brandId).order("created_at", { ascending: false });
+ const container = document.getElementById("whitelistRows");
+ const rows = data || [];
+ container.innerHTML = rows.length ? "" : `<p class="muted">${DIP.t("noWhitelist")}</p>`;
+ rows.forEach((w) => {
+  const div = document.createElement("div");
+  div.className = "wl-row";
+  div.innerHTML = `<span>${w.domain}</span><button class="danger" style="padding:4px 8px;font-size:.7rem" data-id="${w.id}">${DIP.t("btnRemove")}</button>`;
+  div.querySelector("button").addEventListener("click", () => removeWhitelist(w.id));
+  container.appendChild(div);
+ });
+}
+
+async function addWhitelist() {
+ const domain = document.getElementById("wlDomain").value.trim().toLowerCase();
+ if (!domain || !selectedBrandId) return;
+ const { error } = await sb.from("whitelist").insert({ brand_id: selectedBrandId, domain });
+ if (error) { alert(error.message); return; }
+ document.getElementById("wlDomain").value = "";
+ await loadWhitelist(selectedBrandId);
+}
+async function quickWhitelist(domain) {
+ if (!selectedBrandId) return;
+ await sb.from("whitelist").insert({ brand_id: selectedBrandId, domain });
+ await loadWhitelist(selectedBrandId);
+}
+async function removeWhitelist(id) {
+ await sb.from("whitelist").delete().eq("id", id);
+ await loadWhitelist(selectedBrandId);
+}
+
+async function triggerScan() {
+ if (!selectedBrandId) { alert(DIP.t("noBrandSelected")); return; }
+ const btn = document.getElementById("scanBtn");
+ btn.disabled = true; btn.textContent = DIP.t("scanning");
+ try {
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/scan-brand`, {
+   method: "POST",
+   headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentSession.access_token}` },
+   body: JSON.stringify({ brand_id: selectedBrandId, triggered_by: "manual" }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  await selectBrand(selectedBrandId);
+  btn.textContent = DIP.t("scanDone");
+ } catch (e) {
+  alert(DIP.t("scanError") + e.message);
+ } finally {
+  btn.disabled = false;
+  setTimeout(() => { btn.textContent = DIP.t("btnScanNow"); }, 2000);
+ }
+}
+
+async function boot() {
+ const { data: { session } } = await sb.auth.getSession();
+ if (session) await onSignedIn(session);
+ sb.auth.onAuthStateChange((event, session) => { if (event === "SIGNED_IN") onSignedIn(session); });
+}
+
+async function onSignedIn(session) {
+ currentSession = session; currentUser = session.user;
+ document.getElementById("loginCard").classList.add("hidden");
+ document.getElementById("appArea").classList.remove("hidden");
+ document.getElementById("logoutBtn").classList.remove("hidden");
+ document.getElementById("userEmail").textContent = currentUser.email;
+ await loadProfile();
+ await loadBrands();
+}
+
+boot();
+</script>
+</body>
+</html>
